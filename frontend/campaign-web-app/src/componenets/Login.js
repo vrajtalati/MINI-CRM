@@ -1,29 +1,27 @@
-import React from 'react'
-import "./login.css"
+import React from 'react';
+import './login.css';
 
 const Login = () => {
 
-    const loginwithgoogle = ()=>{
-        window.open("http://localhost:5000/auth/google/callback","_self")
+    const loginwithgoogle = () => {
+        window.open("http://localhost:5000/auth/google/callback", "_self");
     }
-  return (
-    <>
-        <div className="login-page">
-            <h1 style={{textAlign:"center"}}>Login</h1>
-            <div className="form">
-                <form className='login-form'>
-                    <input type="text" name="" id="" placeholder='username' />
-                    <input type="password" name="" id="" placeholder='password'  />
-                    <button>Login</button>
-                    <p className='message'>Not Registerd? <a href="#">Create an account</a></p>
-                </form>
-                <button className='login-with-google-btn' onClick={loginwithgoogle}>
-                    Sign In With Google
-                </button>
+
+    return (
+        <>
+            <div className="login-page">
+                <h1>Mini CRM</h1>
+                <div className="form">
+                    <button className='login-with-google-btn' onClick={loginwithgoogle}>
+                        Sign In With Google
+                    </button>
+                </div>
             </div>
-        </div>
-    </>
-  )
+            <footer>
+                Made by Vraj Talati
+            </footer>
+        </>
+    );
 }
 
-export default Login
+export default Login;

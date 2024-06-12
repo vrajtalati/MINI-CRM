@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './AudienceForm.css'; // Import the CSS file
+import './AudienceForm.css'; 
 
 const AudienceForm = () => {
   const navigate = useNavigate();
@@ -47,45 +47,53 @@ const AudienceForm = () => {
   };
 
   return (
-    <div className="audience-form">
-      <h2>Create Audience</h2>
-      <input
-        type="text"
-        placeholder="Campaign Name"
-        value={campaignName}
-        onChange={(e) => setCampaignName(e.target.value)}
-        className="form-input"
-      />
-      {rules.map((rule, index) => (
-        <div key={index} className="rule-group">
-          {index > 0 && (
-            <select name="logical" onChange={(e) => handleChange(index, e)} value={rule.logical} className="form-select">
-              <option value="AND">AND</option>
-              <option value="OR">OR</option>
+    <div className="audience-form-page">
+      <header>
+        <h1>Mini CRM</h1>
+      </header>
+      <div className="audience-form">
+        <h2>Create Audience</h2>
+        <input
+          type="text"
+          placeholder="Campaign Name"
+          value={campaignName}
+          onChange={(e) => setCampaignName(e.target.value)}
+          className="form-input"
+        />
+        {rules.map((rule, index) => (
+          <div key={index} className="rule-group">
+            {index > 0 && (
+              <select name="logical" onChange={(e) => handleChange(index, e)} value={rule.logical} className="form-select">
+                <option value="AND">AND</option>
+                <option value="OR">OR</option>
+              </select>
+            )}
+            <select name="field" onChange={(e) => handleChange(index, e)} value={rule.field} className="form-select">
+              <option value="">Select Field</option>
+              {fields.map((field) => (
+                <option key={field} value={field}>
+                  {field === 'total_spends' ? 'Total Spends' : 'Number of Visits'}
+                </option>
+              ))}
             </select>
-          )}
-          <select name="field" onChange={(e) => handleChange(index, e)} value={rule.field} className="form-select">
-            <option value="">Select Field</option>
-            {fields.map((field) => (
-              <option key={field} value={field}>
-                {field === 'total_spends' ? 'Total Spends' : 'Number of Visits'}
-              </option>
-            ))}
-          </select>
-          <select name="operator" onChange={(e) => handleChange(index, e)} value={rule.operator} className="form-select">
-            <option value=">">greater than</option>
-            <option value="<">less than</option>
-            <option value="=">equal to</option>
-          </select>
-          <input name="value" placeholder="Value" onChange={(e) => handleChange(index, e)} value={rule.value} className="form-input" />
+            <select name="operator" onChange={(e) => handleChange(index, e)} value={rule.operator} className="form-select">
+              <option value=">">greater than</option>
+              <option value="<">less than</option>
+              <option value="=">equal to</option>
+            </select>
+            <input name="value" placeholder="Value" onChange={(e) => handleChange(index, e)} value={rule.value} className="form-input" />
+          </div>
+        ))}
+        <div className="button-group">
+          <button onClick={addRule} disabled={rules.length >= fields.length} className="form-button">Add Rule</button>
+          <button onClick={checkAudienceSize} className="form-button">Check Audience Size</button>
+          <button onClick={saveAudience} className="form-button">Save Audience</button>
         </div>
-      ))}
-      <div className="button-group">
-        <button onClick={addRule} disabled={rules.length >= fields.length} className="form-button">Add Rule</button>
-        <button onClick={checkAudienceSize} className="form-button">Check Audience Size</button>
-        <button onClick={saveAudience} className="form-button">Save Audience</button>
+        {audienceSize !== null && <p>Audience Size: {audienceSize}</p>}
       </div>
-      {audienceSize !== null && <p>Audience Size: {audienceSize}</p>}
+      <footer>
+        Made by Vraj Talati
+      </footer>
     </div>
   );
 };

@@ -1,30 +1,35 @@
+// server.js
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const connectDB = require('./config/db');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const passport = require('passport');
-const OAuth2Strategy = require("passport-google-oauth2").Strategy;
+const OAuth2Strategy = require('passport-google-oauth2').Strategy;
 const session = require('express-session');
-const userdb = require('./models/User'); // Ensure you have this model
+const userdb = require('./models/User');
+const { publishToQueue } = require('./rabbitmq');
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
+// Middleware setup
 app.use(bodyParser.json());
 app.use(cors());
-
 app.use(session({
   secret: process.env.SESSION_SECRET || 'yourSecretKey',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: { secure: false } // Set to true if using HTTPS
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Passport Google OAuth2 strategy
 passport.use(
   new OAuth2Strategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
@@ -55,31 +60,24 @@ passport.use(
 );
 
 passport.serializeUser((user, done) => {
-  done(null, user);
+  done(null, user._id); // Serialize user ID
 });
 
-passport.deserializeUser((user, done) => {
-  done(null, user);
-});
-
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-app.get("/auth/google/callback", passport.authenticate("google", {
-  successRedirect: "http://localhost:3000/audience",
-  failureRedirect: "http://localhost:3000"
-}));
-
-app.get("/login/success", async (req, res) => {
-  if (req.user) {
-    res.status(200).json({ message: "User Logged In", user: req.user });
-  } else {
-    res.status(400).json({ message: "Not Authorized" });
+passport.deserializeUser(async (id, done) => {
+  try {
+    const user = await userdb.findById(id);
+    done(null, user);
+  } catch (error) {
+    done(error, null);
   }
 });
 
-app.use('/api', require('./routes/CustomerRoutes'));
-app.use('/api', require('./routes/OrderRoutes'));
-app.use('/api', require('./routes/CommunicationRoutes'));
+// Authentication routes
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+app.get('/auth/google/callback', passport.authenticate('google', {
+  successRedirect: 'https://tubular-brioche-966247.netlify.app/audience',
+  failureRedirect: 'https://tubular-brioche-966247.netlify.app'
+}));
 
 app.get('/auth/logout', (req, res, next) => {
   req.logout(err => {
@@ -88,6 +86,20 @@ app.get('/auth/logout', (req, res, next) => {
   });
 });
 
+// API routes
+app.use('/api', require('./routes/CustomerRoutes'));
+app.use('/api', require('./routes/OrderRoutes'));
+app.use('/api', require('./routes/CommunicationRoutes'));
+app.use('/api', require('./routes/VendorRoutes')); // Added Vendor routes
+app.use('/api', require('./routes/ReceiptRoutes')); // Added Receipt routes
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+// Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
